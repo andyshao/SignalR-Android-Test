@@ -6,11 +6,15 @@ See License.txt in the project root for license information.
 
 package microsoft.aspnet.signalr.client.test.integration.tests;
 
+import android.util.Log;
+
 import java.io.Console;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Semaphore;
 
@@ -380,7 +384,7 @@ public class MiscTests extends TestGroup {
             @Override
             public TestResult executeTest() {
                 try {
-                    HubConnection connection = ApplicationContext.createHubConnection();
+                    final HubConnection connection = ApplicationContext.createHubConnection();
                     ClientTransport transport = ApplicationContext.createTransport(transportType);
                     
                     testData = new InteralTestData();
@@ -390,6 +394,27 @@ public class MiscTests extends TestGroup {
                         @Override
                         public void run() {
                             testData.connectionStates.add(ConnectionState.Reconnecting);
+                        }
+                    });
+
+                    connection.closed(new Runnable() {
+                        @Override
+                        public void run() {
+                            //if (disconnectExpected) {
+                                // disconnect was expected, for example, application is being shut down
+                                //return;
+                            //}
+                            new Timer(false).schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    connection.start().done(new Action<Void>() {
+                                        @Override
+                                        public void run(Void v) throws Exception {
+                                            Log.i("Fuck Test", "Fuck You!");
+                                        }
+                                    });
+                                }
+                            }, 5000);
                         }
                     });
                     
